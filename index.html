@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Food Bill Expense Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #f8fafc; /* slate-50 */
+            --bg-card: #ffffff;
+            --text-primary: #1e293b; /* slate-800 */
+            --text-secondary: #64748b; /* slate-500 */
+            --primary: #14b8a6; /* teal-500 */
+            --primary-hover: #0d9488; /* teal-600 */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+        }
+        details > summary {
+            list-style: none;
+            cursor: pointer;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        details[open] summary .arrow {
+            transform: rotate(90deg);
+        }
+        .arrow {
+            transition: transform 0.2s;
+        }
+        .nav-btn.active svg,
+        .nav-btn.active span {
+            color: var(--primary);
+        }
+        .detail-tab.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+        }
+        #toastNotification {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            transform: translate(-50%, 40px);
+            opacity: 0;
+            pointer-events: none;
+        }
+        #toastNotification.show {
+            transform: translate(-50%, 0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto max-w-lg p-3 pb-24">
+        
+        <!-- Page Views -->
+        <div id="homeView" class="page">
+            <header class="text-center mb-6">
+                <h1 class="text-4xl font-extrabold tracking-tight flex items-center justify-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    <span class="bg-gradient-to-r from-teal-500 to-cyan-500 bg-clip-text text-transparent">
+                        BiteBudget
+                    </span>
+                </h1>
+                <p class="text-gray-500 mt-1 text-sm">Your personal food expense companion.</p>
+            </header>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm mb-4">
+                <h2 class="text-lg font-semibold mb-3">Add Today's Expense</h2>
+                <div class="flex items-center space-x-2">
+                    <input type="number" id="expenseAmount" placeholder="Enter amount" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400">
+                    <button id="addExpenseBtn" class="bg-teal-500 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-teal-600 transition duration-300 shadow-sm">Add</button>
+                </div>
+                 <button id="manualEntryBtn" class="mt-3 w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition font-medium text-sm">
+                    Add a Missed or Past Expense
+                </button>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm mb-4">
+                <h2 class="text-lg font-semibold mb-3">Today's History</h2>
+                <div id="todayHistory" class="space-y-2"></div>
+            </div>
+
+            <details class="bg-white rounded-xl shadow-sm" open>
+                <summary class="p-4 flex justify-between items-center">
+                    <h2 class="text-lg font-semibold">Expense Chart</h2>
+                    <svg class="arrow h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                </summary>
+                <div class="relative h-56 p-4 pt-0">
+                    <canvas id="expenseChart"></canvas>
+                </div>
+            </details>
+        </div>
+
+        <div id="dailyView" class="page hidden"></div>
+        <div id="weeklyView" class="page hidden"></div>
+        <div id="monthlyView" class="page hidden"></div>
+
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around max-w-lg mx-auto rounded-t-xl shadow-lg">
+        <button class="nav-btn flex-1 flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-50" data-page="homeView">
+            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            <span class="text-xs font-medium mt-1">Home</span>
+        </button>
+        <button class="nav-btn flex-1 flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-50" data-page="dailyView">
+            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            <span class="text-xs font-medium mt-1">Daily</span>
+        </button>
+        <button class="nav-btn flex-1 flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-50" data-page="weeklyView">
+            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            <span class="text-xs font-medium mt-1">Weekly</span>
+        </button>
+        <button class="nav-btn flex-1 flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-50" data-page="monthlyView">
+            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            <span class="text-xs font-medium mt-1">Monthly</span>
+        </button>
+    </nav>
+
+
+    <!-- Modals -->
+    <div id="manualEntryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden p-4"><div class="bg-white p-5 rounded-xl shadow-xl w-full max-w-sm"><h2 class="text-xl font-bold text-gray-800 mb-2">Manual Entry</h2><p class="text-gray-500 mb-5 text-sm">Log an expense for today or a past date.</p><div class="space-y-4"><label class="block"><span class="text-gray-700 font-medium text-sm">Date</span><input type="date" id="manualDate" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 py-2.5"></label><!-- Form for today's missed meals --><div id="manualEntryTodayForm"><label class="block"><span class="text-gray-700 font-medium text-sm">Category</span><select id="manualCategory" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 py-2.5"></select></label><label class="block mt-4"><span class="text-gray-700 font-medium text-sm">Amount</span><input type="number" id="manualAmount" placeholder="" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 py-2.5"></label></div><!-- Form for past days --><div id="manualEntryPastDayForm" class="hidden space-y-4"><div class="grid grid-cols-2 gap-4"><label class="block"><span class="text-gray-700 font-medium text-sm">Breakfast</span><input type="number" id="manualBreakfast" placeholder="" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm py-2.5"></label><label class="block"><span class="text-gray-700 font-medium text-sm">Lunch</span><input type="number" id="manualLunch" placeholder="" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm py-2.5"></label></div><div class="grid grid-cols-2 gap-4"><label class="block"><span class="text-gray-700 font-medium text-sm">Snacks</span><input type="number" id="manualSnacks" placeholder="" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm py-2.5"></label><label class="block"><span class="text-gray-700 font-medium text-sm">Dinner</span><input type="number" id="manualDinner" placeholder="" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm py-2.5"></label></div></div></div><div class="flex justify-end space-x-3 mt-5"><button id="cancelManualEntry" class="bg-gray-200 text-gray-800 px-5 py-2 rounded-lg hover:bg-gray-300 font-semibold text-sm">Cancel</button><button id="saveManualEntry" class="bg-teal-500 text-white px-5 py-2 rounded-lg hover:bg-teal-600 font-semibold shadow-sm text-sm">Save</button></div></div></div>
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"><div class="bg-white p-5 rounded-lg shadow-xl w-full max-w-sm"><h2 class="text-lg font-semibold mb-4">Edit Expense</h2><div class="space-y-4"><label class="block"><span class="text-gray-700 text-sm">Category</span><select id="editCategory" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option>Breakfast</option><option>Lunch</option><option>Snacks</option><option>Dinner</option></select></label><label class="block"><span class="text-gray-700 text-sm">Amount</span><input type="number" id="editAmount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></label></div><div class="flex justify-end space-x-4 mt-6"><button id="cancelEdit" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 text-sm">Cancel</button><button id="saveEdit" class="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 text-sm">Save</button></div></div></div>
+    <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"><div class="bg-white p-5 rounded-lg shadow-xl w-full max-w-sm"><h2 class="text-lg font-semibold mb-2">Are you sure?</h2><p id="confirmMessage" class="text-gray-600 mb-6 text-sm">Do you want to delete this expense?</p><div class="flex justify-end space-x-4"><button id="cancelDelete" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 text-sm">Cancel</button><button id="confirmDelete" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 text-sm">Delete</button></div></div></div>
+    <div id="alertModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"><div class="bg-white p-5 rounded-lg shadow-xl w-full max-w-sm text-center"><p id="alertMessage" class="text-base text-gray-700 mb-6"></p><button id="alertOk" class="bg-teal-500 text-white px-6 py-2 rounded-lg hover:bg-teal-600 text-sm">OK</button></div></div>
+
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-5 py-2.5 rounded-lg shadow-lg text-sm font-medium z-50">
+        <p id="toastMessage"></p>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let expenses = [];
+            let expenseChart;
+
+            // DOM Elements
+            const pages = document.querySelectorAll('.page');
+            const navButtons = document.querySelectorAll('.nav-btn');
+            
+            const addExpenseBtn = document.getElementById('addExpenseBtn');
+            const expenseAmountInput = document.getElementById('expenseAmount');
+            const todayHistoryDiv = document.getElementById('todayHistory');
+
+            // Modal Elements
+            const manualEntryModal = document.getElementById('manualEntryModal');
+            const manualEntryBtn = document.getElementById('manualEntryBtn');
+            const cancelManualEntryBtn = document.getElementById('cancelManualEntry');
+            const saveManualEntryBtn = document.getElementById('saveManualEntry');
+            const manualDateInput = document.getElementById('manualDate');
+            const manualEntryTodayForm = document.getElementById('manualEntryTodayForm');
+            const manualCategorySelect = document.getElementById('manualCategory');
+            const manualAmountInput = document.getElementById('manualAmount');
+            const manualEntryPastDayForm = document.getElementById('manualEntryPastDayForm');
+
+            const editModal = document.getElementById('editModal');
+            const editAmountInput = document.getElementById('editAmount');
+            const editCategorySelect = document.getElementById('editCategory');
+            const cancelEditBtn = document.getElementById('cancelEdit');
+            const saveEditBtn = document.getElementById('saveEdit');
+            let editingExpenseId = null;
+
+            const confirmModal = document.getElementById('confirmModal');
+            let deletingExpenseId = null;
+
+            const alertModal = document.getElementById('alertModal');
+            const alertMessage = document.getElementById('alertMessage');
+            const alertOkBtn = document.getElementById('alertOk');
+
+            // Toast Elements
+            const toastNotification = document.getElementById('toastNotification');
+            const toastMessage = document.getElementById('toastMessage');
+            let toastTimeout;
+
+            // --- Custom Notification Functions ---
+            function showAlert(message) {
+                alertMessage.textContent = message;
+                alertModal.classList.remove('hidden');
+            }
+            alertOkBtn.addEventListener('click', () => alertModal.classList.add('hidden'));
+
+            function showToast(message) {
+                clearTimeout(toastTimeout); // Clear any existing timer
+                toastMessage.textContent = message;
+                toastNotification.classList.add('show');
+                toastTimeout = setTimeout(() => {
+                    toastNotification.classList.remove('show');
+                }, 3000); // Hide after 3 seconds
+            }
+
+            // --- View Navigation ---
+            function showPage(pageId) {
+                pages.forEach(page => {
+                    page.classList.toggle('hidden', page.id !== pageId);
+                });
+                navButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.page === pageId);
+                });
+
+                // Render content for the new page
+                if (pageId === 'dailyView') renderDailyDetail();
+                if (pageId === 'weeklyView') renderWeeklyDetail();
+                if (pageId === 'monthlyView') renderMonthlyDetail();
+            }
+            
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', () => showPage(btn.dataset.page));
+            });
+
+            // --- Local Storage ---
+            const saveExpenses = () => localStorage.setItem('foodExpenses', JSON.stringify(expenses));
+            function loadExpenses() {
+                const stored = localStorage.getItem('foodExpenses');
+                if (stored) {
+                    expenses = JSON.parse(stored).map(e => ({...e, timestamp: new Date(e.timestamp)}));
+                }
+                renderAll();
+            }
+
+            // --- Core App Logic ---
+            addExpenseBtn.addEventListener('click', () => {
+                const amount = parseFloat(expenseAmountInput.value);
+                if (isNaN(amount) || amount <= 0) {
+                    showAlert("Please enter a valid amount.");
+                    return;
+                }
+                const now = new Date();
+                expenses.push({
+                    id: Date.now().toString(),
+                    amount,
+                    category: getCategoryByTime(now),
+                    timestamp: now
+                });
+                saveExpenses();
+                renderAll();
+                expenseAmountInput.value = '';
+            });
+
+            const getCategoryByTime = (date) => {
+                const hour = date.getHours();
+                if (hour >= 6 && hour < 10) return 'Breakfast';
+                if (hour >= 10 && hour < 16) return 'Lunch';
+                if (hour >= 16 && hour < 19) return 'Snacks';
+                return 'Dinner';
+            };
+            
+            // --- Render Functions ---
+            function renderAll() {
+                expenses.sort((a, b) => b.timestamp - a.timestamp);
+                // Only render what's visible on the home page
+                renderTodayHistory();
+                renderChart();
+                 // If a detail page is active, re-render it
+                const activePage = document.querySelector('.page:not(.hidden)').id;
+                if (activePage === 'dailyView') renderDailyDetail();
+                if (activePage === 'weeklyView') renderWeeklyDetail();
+                if (activePage === 'monthlyView') renderMonthlyDetail();
+            }
+
+            function renderTodayHistory() {
+                todayHistoryDiv.innerHTML = '';
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const todaysExpenses = expenses.filter(e => e.timestamp >= today);
+                if (todaysExpenses.length === 0) {
+                    todayHistoryDiv.innerHTML = '<p class="text-gray-500 text-sm">No expenses recorded today.</p>';
+                    return;
+                }
+                todaysExpenses.forEach(expense => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center p-2.5 bg-gray-50 rounded-lg';
+                    div.innerHTML = `<p class="font-medium text-sm">${expense.category}</p><div class="flex items-center space-x-2"><p class="font-semibold text-base">₹${expense.amount.toFixed(2)}</p><button class="delete-btn text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100" data-id="${expense.id}"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg></button></div>`;
+                    todayHistoryDiv.appendChild(div);
+                });
+            }
+            
+            function renderDailyDetail() {
+                const dailyView = document.getElementById('dailyView');
+                dailyView.innerHTML = ''; // Clear previous content
+                const expensesByDate = expenses.reduce((acc, expense) => {
+                    const date = expense.timestamp.toLocaleDateString();
+                    if (!acc[date]) acc[date] = { expenses: [], total: 0 };
+                    acc[date].expenses.push(expense);
+                    acc[date].total += expense.amount;
+                    return acc;
+                }, {});
+                const sortedDates = Object.keys(expensesByDate).sort((a, b) => new Date(b.split('/').reverse().join('-')) - new Date(a.split('/').reverse().join('-')));
+                
+                if (sortedDates.length === 0) {
+                    dailyView.innerHTML = '<p class="text-gray-500 text-center mt-8 text-sm">No daily expenses to show.</p>';
+                    return;
+                }
+
+                const container = document.createElement('div');
+                container.className = 'space-y-3';
+
+                sortedDates.forEach(date => {
+                    const day = expensesByDate[date];
+                    const details = document.createElement('details');
+                    details.className = 'bg-white rounded-xl shadow-sm';
+                    
+                    const summary = document.createElement('summary');
+                    summary.className = 'p-3 flex justify-between items-center font-semibold';
+                    summary.innerHTML = `
+                        <div class="flex flex-col">
+                            <span class="text-base text-gray-800">${date}</span>
+                            <span class="text-xs font-normal text-gray-500">${day.expenses.length} ${day.expenses.length === 1 ? 'entry' : 'entries'}</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-lg font-bold text-gray-900">₹${day.total.toFixed(2)}</span>
+                            <svg class="arrow h-5 w-5 ml-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                        </div>
+                    `;
+                    
+                    const content = document.createElement('div');
+                    content.className = 'px-3 pb-2';
+                    
+                    const expenseList = document.createElement('div');
+                    expenseList.className = 'border-t border-gray-200';
+                    day.expenses.forEach(expense => expenseList.appendChild(createExpenseItem(expense)));
+                    
+                    content.appendChild(expenseList);
+                    details.appendChild(summary);
+                    details.appendChild(content);
+                    container.appendChild(details);
+                });
+                dailyView.appendChild(container);
+            }
+
+            // --- Helper functions for Weekly View ---
+            function getOrdinalSuffix(day) {
+                if (day > 3 && day < 21) return 'th';
+                switch (day % 10) {
+                    case 1: return "st";
+                    case 2: return "nd";
+                    case 3: return "rd";
+                    default: return "th";
+                }
+            }
+
+            function getWeekDateRange(year, month, weekNum) {
+                const monthName = new Date(year, month).toLocaleString('default', { month: 'long' });
+                let startDay, endDay;
+                const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+
+                if (weekNum === 1) { startDay = 1; endDay = 7; }
+                else if (weekNum === 2) { startDay = 8; endDay = 14; }
+                else if (weekNum === 3) { startDay = 15; endDay = 21; }
+                else if (weekNum === 4) { startDay = 22; endDay = 28; }
+                else { startDay = 29; endDay = lastDayOfMonth; }
+                
+                if (endDay > lastDayOfMonth) endDay = lastDayOfMonth;
+
+                return `${startDay}${getOrdinalSuffix(startDay)} - ${endDay}${getOrdinalSuffix(endDay)} ${monthName}`;
+            }
+
+            function renderWeeklyDetail() {
+                const weeklyView = document.getElementById('weeklyView');
+                weeklyView.innerHTML = '';
+                const expensesByCustomWeek = expenses.reduce((acc, expense) => {
+                    const d = expense.timestamp;
+                    const year = d.getFullYear();
+                    const month = d.getMonth();
+                    const date = d.getDate();
+                    let weekNum;
+
+                    if (date <= 7) weekNum = 1;
+                    else if (date <= 14) weekNum = 2;
+                    else if (date <= 21) weekNum = 3;
+                    else if (date <= 28) weekNum = 4;
+                    else weekNum = 5;
+
+                    const monthKey = `${year}-${month}`;
+                    const weekKey = `${monthKey}-Week${weekNum}`;
+                    
+                    if (!acc[weekKey]) {
+                        acc[weekKey] = {
+                            expenses: [],
+                            total: 0,
+                            monthName: d.toLocaleString('default', { month: 'long', year: 'numeric' }),
+                        };
+                    }
+                    acc[weekKey].expenses.push(expense);
+                    acc[weekKey].total += expense.amount;
+                    return acc;
+                }, {});
+
+                const sortedMonthKeys = Object.keys(expensesByCustomWeek)
+                    .map(key => key.substring(0, key.lastIndexOf('-')))
+                    .filter((value, index, self) => self.indexOf(value) === index)
+                    .sort((a, b) => {
+                        const [yearA, monthA] = a.split('-');
+                        const [yearB, monthB] = b.split('-');
+                        return new Date(yearB, monthB) - new Date(yearA, monthA);
+                    });
+
+                if (sortedMonthKeys.length === 0) {
+                    weeklyView.innerHTML = '<p class="text-gray-500 text-center mt-8 text-sm">No weekly expenses to show.</p>';
+                    return;
+                }
+
+                sortedMonthKeys.forEach(monthKey => {
+                    const monthContainer = document.createElement('div');
+                    monthContainer.className = 'mb-6';
+
+                    const [year, month] = monthKey.split('-').map(Number);
+                    const monthName = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+                    const monthHeader = document.createElement('h3');
+                    monthHeader.className = 'text-xl font-bold mb-3 text-gray-800';
+                    monthHeader.textContent = monthName;
+                    monthContainer.appendChild(monthHeader);
+
+                    const tabNav = document.createElement('div');
+                    tabNav.className = 'flex flex-wrap border-b border-gray-200';
+                    const tabContentContainer = document.createElement('div');
+                    tabContentContainer.className = 'mt-3';
+                    let firstTab = true;
+
+                    for (let i = 1; i <= 5; i++) {
+                        const weekKey = `${monthKey}-Week${i}`;
+                        const week = expensesByCustomWeek[weekKey];
+                        
+                        if (week) {
+                            const tabButton = document.createElement('button');
+                            tabButton.className = 'detail-tab py-1.5 px-3 -mb-px border-b-2 border-transparent text-gray-600 hover:text-teal-600';
+                            const dateRange = getWeekDateRange(year, month, i).replace(monthName, '').trim();
+                            tabButton.innerHTML = `<span class="font-semibold text-sm">Week ${i}</span><span class="block text-xs text-gray-500">${dateRange}</span>`;
+                            tabButton.dataset.target = weekKey;
+
+                            const tabContent = document.createElement('div');
+                            tabContent.id = weekKey;
+                            tabContent.className = 'tab-pane hidden bg-white p-3 rounded-lg shadow-sm';
+
+                            const dayTotals = week.expenses.reduce((acc, expense) => {
+                                const dayName = expense.timestamp.toLocaleDateString('default', { weekday: 'short' });
+                                const date = expense.timestamp.getDate();
+                                const dayKey = `${dayName} (${date}${getOrdinalSuffix(date)})`;
+                                acc[dayKey] = (acc[dayKey] || 0) + expense.amount;
+                                return acc;
+                            }, {});
+                            
+                            const dayList = document.createElement('div');
+                            dayList.className = 'space-y-2';
+                            const sortedDays = Object.keys(dayTotals).sort((a, b) => parseInt(a.match(/\((\d+)/)[1]) - parseInt(b.match(/\((\d+)/)[1]));
+
+                            sortedDays.forEach(dayKey => {
+                                const total = dayTotals[dayKey];
+                                const dayItem = document.createElement('div');
+                                dayItem.className = 'flex justify-between items-center p-2 bg-gray-50 rounded-md';
+                                dayItem.innerHTML = `<p class="font-medium text-sm text-gray-700">${dayKey}</p><p class="font-semibold text-sm text-gray-800">₹${total.toFixed(2)}</p>`;
+                                dayList.appendChild(dayItem);
+                            });
+
+                            tabContent.appendChild(dayList);
+
+                            const weekTotalFooter = document.createElement('div');
+                            weekTotalFooter.className = 'flex justify-between items-center mt-3 pt-2 border-t border-gray-200 font-bold text-base';
+                            weekTotalFooter.innerHTML = `<span>Week Total</span><span>₹${week.total.toFixed(2)}</span>`;
+                            tabContent.appendChild(weekTotalFooter);
+
+                            if (firstTab) {
+                                tabButton.classList.add('active');
+                                tabContent.classList.remove('hidden');
+                                firstTab = false;
+                            }
+
+                            tabNav.appendChild(tabButton);
+                            tabContentContainer.appendChild(tabContent);
+                        }
+                    }
+
+                    monthContainer.appendChild(tabNav);
+                    monthContainer.appendChild(tabContentContainer);
+                    weeklyView.appendChild(monthContainer);
+
+                    tabNav.addEventListener('click', (e) => {
+                        const targetButton = e.target.closest('.detail-tab');
+                        if (targetButton) {
+                            const currentNav = targetButton.closest('.flex');
+                            const currentContentContainer = currentNav.nextElementSibling;
+
+                            currentNav.querySelectorAll('.detail-tab').forEach(tab => tab.classList.remove('active'));
+                            targetButton.classList.add('active');
+                            
+                            currentContentContainer.querySelectorAll('.tab-pane').forEach(pane => pane.classList.add('hidden'));
+                            currentContentContainer.querySelector(`#${CSS.escape(targetButton.dataset.target)}`).classList.remove('hidden');
+                        }
+                    });
+                });
+            }
+
+            function renderMonthlyDetail() {
+                const monthlyView = document.getElementById('monthlyView');
+                monthlyView.innerHTML = '';
+                const expensesByMonth = expenses.reduce((acc, expense) => {
+                    const d = expense.timestamp;
+                    const monthKey = `${d.getFullYear()}-${d.getMonth()}`;
+                    const monthName = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+                    if (!acc[monthKey]) acc[monthKey] = { total: 0, name: monthName };
+                    acc[monthKey].total += expense.amount;
+                    return acc;
+                }, {});
+
+                const sortedMonths = Object.keys(expensesByMonth).sort((a, b) => {
+                    const [yearA, monthA] = a.split('-');
+                    const [yearB, monthB] = b.split('-');
+                    return new Date(yearB, monthB) - new Date(yearA, monthA);
+                });
+                
+                if (sortedMonths.length === 0) {
+                    monthlyView.innerHTML = '<p class="text-gray-500 text-center mt-8 text-sm">No monthly expenses to show.</p>';
+                    return;
+                }
+
+                const monthList = document.createElement('div');
+                monthList.className = 'space-y-2';
+
+                sortedMonths.forEach(monthKey => {
+                    const month = expensesByMonth[monthKey];
+                    const monthItem = document.createElement('div');
+                    monthItem.className = 'flex justify-between items-center p-3 bg-white rounded-xl shadow-sm';
+                    monthItem.innerHTML = `<p class="font-medium text-base text-gray-700">${month.name}</p><p class="font-semibold text-base text-gray-800">₹${month.total.toFixed(2)}</p>`;
+                    monthList.appendChild(monthItem);
+                });
+
+                monthlyView.appendChild(monthList);
+            }
+
+            function createExpenseItem(expense) {
+                const item = document.createElement('div');
+                item.className = 'flex justify-between items-center py-2.5 border-b border-gray-100 last:border-b-0';
+                item.innerHTML = `
+                    <div>
+                        <p class="font-medium text-sm text-gray-700">${expense.category}</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <p class="font-semibold text-sm text-gray-800">₹${expense.amount.toFixed(2)}</p>
+                        <button class="edit-btn text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-100" data-id="${expense.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                        </button>
+                        <button class="delete-btn text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100" data-id="${expense.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>`;
+                return item;
+            }
+            
+            // --- Event Delegation & Modal Controls ---
+            document.body.addEventListener('click', (e) => {
+                const deleteBtn = e.target.closest('.delete-btn');
+                if (deleteBtn) {
+                    deletingExpenseId = deleteBtn.dataset.id;
+                    confirmModal.classList.remove('hidden');
+                }
+                const editBtn = e.target.closest('.edit-btn');
+                if (editBtn) {
+                    editingExpenseId = editBtn.dataset.id;
+                    const expense = expenses.find(ex => ex.id === editingExpenseId);
+                    if(expense) {
+                        editAmountInput.value = expense.amount;
+                        editCategorySelect.value = expense.category;
+                        editModal.classList.remove('hidden');
+                    }
+                }
+            });
+
+            // Manual Entry Modal Logic
+            function updateManualCategoryOptions() {
+                const hour = new Date().getHours();
+                const options = [];
+                if (hour >= 10) options.push('Breakfast');
+                if (hour >= 16) options.push('Lunch');
+                if (hour >= 19) options.push('Snacks');
+                manualCategorySelect.innerHTML = options.length > 0
+                    ? options.map(opt => `<option>${opt}</option>`).join('')
+                    : '<option disabled>No missed meals yet</option>';
+            }
+
+            function updateManualEntryForm() {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const selectedDate = new Date(manualDateInput.value);
+                selectedDate.setHours(12, 0, 0, 0);
+
+                if (selectedDate.getTime() < today.getTime()) {
+                    manualEntryTodayForm.classList.add('hidden');
+                    manualEntryPastDayForm.classList.remove('hidden');
+                } else {
+                    manualEntryTodayForm.classList.remove('hidden');
+                    manualEntryPastDayForm.classList.add('hidden');
+                    updateManualCategoryOptions();
+                }
+            }
+            manualEntryBtn.addEventListener('click', () => {
+                const today = new Date().toISOString().split("T")[0];
+                manualDateInput.max = today;
+                manualDateInput.valueAsDate = new Date();
+                updateManualEntryForm();
+                manualEntryModal.classList.remove('hidden');
+            });
+            manualDateInput.addEventListener('change', updateManualEntryForm);
+            cancelManualEntryBtn.addEventListener('click', () => manualEntryModal.classList.add('hidden'));
+            saveManualEntryBtn.addEventListener('click', () => {
+                const dateStr = manualDateInput.value;
+                if (!dateStr) {
+                    showAlert("Please select a date.");
+                    return;
+                }
+                let entriesAdded = 0;
+
+                if (!manualEntryTodayForm.classList.contains('hidden')) {
+                    const amount = parseFloat(manualAmountInput.value);
+                    const timestamp = new Date();
+                    if (!isNaN(amount) && amount > 0) {
+                        if(manualCategorySelect.value) {
+                            expenses.push({ id: Date.now().toString(), amount, category: manualCategorySelect.value, timestamp });
+                            entriesAdded++;
+                            manualAmountInput.value = '';
+                        } else {
+                            showAlert("No missed meal category available to select.");
+                            return;
+                        }
+                    } else if (manualAmountInput.value) {
+                         showAlert("Please enter a valid amount.");
+                         return;
+                    }
+                } else {
+                    const timestamp = new Date(dateStr + 'T12:00:00');
+                    const mealInputs = [
+                        { category: 'Breakfast', input: document.getElementById('manualBreakfast') },
+                        { category: 'Lunch', input: document.getElementById('manualLunch') },
+                        { category: 'Snacks', input: document.getElementById('manualSnacks') },
+                        { category: 'Dinner', input: document.getElementById('manualDinner') },
+                    ];
+                    mealInputs.forEach(meal => {
+                        const amount = parseFloat(meal.input.value);
+                        if (!isNaN(amount) && amount > 0) {
+                            expenses.push({ id: `${Date.now()}-${meal.category}`, amount, category: meal.category, timestamp });
+                            entriesAdded++;
+                            meal.input.value = '';
+                        }
+                    });
+                }
+                
+                if (entriesAdded > 0) {
+                    saveExpenses();
+                    renderAll();
+                    showToast(`${entriesAdded} expense(s) added successfully.`);
+                } else {
+                    showToast("No new expenses were entered.");
+                }
+            });
+
+            // Edit Modal
+            cancelEditBtn.addEventListener('click', () => editModal.classList.add('hidden'));
+            saveEditBtn.addEventListener('click', () => {
+                const newAmount = parseFloat(editAmountInput.value);
+                if (isNaN(newAmount) || newAmount <= 0) {
+                    showAlert("Please enter a valid amount.");
+                    return;
+                }
+                if (editingExpenseId) {
+                    const expenseIndex = expenses.findIndex(e => e.id === editingExpenseId);
+                    if (expenseIndex > -1) {
+                        expenses[expenseIndex].amount = newAmount;
+                        expenses[expenseIndex].category = editCategorySelect.value;
+                        saveExpenses();
+                        renderAll();
+                    }
+                    editModal.classList.add('hidden');
+                }
+            });
+
+            // Delete Confirmation Modal
+            document.getElementById('cancelDelete').addEventListener('click', () => confirmModal.classList.add('hidden'));
+            document.getElementById('confirmDelete').addEventListener('click', () => {
+                if (deletingExpenseId) {
+                    expenses = expenses.filter(e => e.id !== deletingExpenseId);
+                    saveExpenses();
+                    renderAll();
+                    confirmModal.classList.add('hidden');
+                }
+            });
+
+            // --- Chart ---
+            function renderChart() {
+                const ctx = document.getElementById('expenseChart').getContext('2d');
+                const categoryTotals = expenses.reduce((acc, {category, amount}) => {
+                    acc[category] = (acc[category] || 0) + amount;
+                    return acc;
+                }, {});
+                if (expenseChart) expenseChart.destroy();
+                expenseChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(categoryTotals),
+                        datasets: [{
+                            data: Object.values(categoryTotals),
+                            backgroundColor: ['#fb923c', '#60a5fa', '#facc15', '#4ade80'], // orange-400, blue-400, amber-400, green-400
+                            borderColor: '#f8fafc',
+                            borderWidth: 4,
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 15 } } } }
+                });
+            }
+
+            // Initial Load
+            loadExpenses();
+            showPage('homeView'); // Set initial page
+        });
+    </script>
+
+</body>
+</html>
