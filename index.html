@@ -208,7 +208,12 @@
 
 <!-- Modals -->
 <div id="manualEntryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden p-4"><div class="bg-white p-5 rounded-xl shadow-xl w-full max-w-sm"><h2 class="text-xl font-bold text-gray-800 mb-2">Manual Entry</h2><p class="text-gray-500 mb-5 text-sm">Log an expense for today or a past date.</p><div class="space-y-4"><label class="block"><span class="text-gray-700 font-medium text-sm">Date</span><input type="date" id="manualDate" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 py-2.5 bg-gray-50"></label><!-- Form for today's missed meals --><div id="manualEntryTodayForm"><label class="block"><span class="text-gray-700 font-medium text-sm">Category</span><select id="manualCategory" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 py-2.5 bg-gray-50"></select></label><label class="block mt-4"><span class="text-gray-700 font-medium text-sm">Amount</span><input type="number" id="manualAmount" placeholder="" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 py-2.5 bg-gray-50"></label></div><!-- Form for past days --><div id="manualEntryPastDayForm" class="hidden space-y-4"><div class="grid grid-cols-2 gap-4"><label class="block"><span class="text-gray-700 font-medium text-sm">Breakfast</span><input type="number" id="manualBreakfast" placeholder="" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm py-2.5 bg-gray-50"></label><label class="block"><span class="text-gray-700 font-medium text-sm">Lunch</span><input type="number" id="manualLunch" placeholder="" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm py-2.5 bg-gray-50"></label></div><div class="grid grid-cols-2 gap-4"><label class="block"><span class="text-gray-700 font-medium text-sm">Snacks</span><input type="number" id="manualSnacks" placeholder="" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm py-2.5 bg-gray-50"></label><label class="block"><span class="text-gray-700 font-medium text-sm">Dinner</span><input type="number" id="manualDinner" placeholder="" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm py-2.5 bg-gray-50"></label></div></div></div><div class="flex justify-end space-x-3 mt-5"><button id="cancelManualEntry" class="bg-gray-200 text-gray-800 px-5 py-2 rounded-lg hover:bg-gray-300 font-semibold text-sm">Cancel</button><button id="saveManualEntry" class="bg-teal-500 text-white px-5 py-2 rounded-lg hover:bg-teal-600 font-semibold shadow-sm text-sm">Save</button></div></div></div>
-<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"><div class="bg-white p-5 rounded-lg shadow-xl w-full max-w-sm"><h2 class="text-lg font-semibold mb-4">Edit Expense</h2><div class="space-y-4"><label class="block"><span class="text-gray-700 text-sm">Category</span><select id="editCategory" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 py-2.5 bg-gray-50"></select></label><label class="block"><span class="text-gray-700 text-sm">Amount</span><input type="number" id="editAmount" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 py-2.5 bg-gray-50"></label></div><div class="flex justify-end space-x-4 mt-6"><button id="cancelEdit" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 text-sm">Cancel</button><button id="saveEdit" class="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 text-sm">Save</button></div></div></div>
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"><div class="bg-white p-5 rounded-lg shadow-xl w-full max-w-sm"><h2 class="text-lg font-semibold mb-4">Edit Expense</h2><div class="space-y-4">
+    <label class="block">
+        <span class="text-gray-700 text-sm">Date</span>
+        <input type="date" id="editDate" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 py-2.5 bg-gray-50">
+    </label>
+    <label class="block"><span class="text-gray-700 text-sm">Category</span><select id="editCategory" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 py-2.5 bg-gray-50"></select></label><label class="block"><span class="text-gray-700 text-sm">Amount</span><input type="number" id="editAmount" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 py-2.5 bg-gray-50"></label></div><div class="flex justify-end space-x-4 mt-6"><button id="cancelEdit" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 text-sm">Cancel</button><button id="saveEdit" class="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 text-sm">Save</button></div></div></div>
 <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"><div class="bg-white p-5 rounded-lg shadow-xl w-full max-w-sm"><h2 class="text-lg font-semibold mb-2">Are you sure?</h2><p id="confirmMessage" class="text-gray-600 mb-6 text-sm">Do you want to delete this expense?</p><div class="flex justify-end space-x-4"><button id="cancelDelete" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 text-sm">Cancel</button><button id="confirmDelete" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 text-sm">Delete</button></div></div></div>
 <div id="alertModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"><div class="bg-white p-5 rounded-lg shadow-xl w-full max-w-sm text-center"><p id="alertMessage" class="text-base text-gray-700 mb-6"></p><button id="alertOk" class="bg-teal-500 text-white px-6 py-2 rounded-lg hover:bg-teal-600 text-sm">OK</button></div></div>
 
@@ -274,6 +279,7 @@
         const editModal = document.getElementById('editModal');
         const editAmountInput = document.getElementById('editAmount');
         const editCategorySelect = document.getElementById('editCategory');
+        const editDateInput = document.getElementById('editDate');
         const cancelEditBtn = document.getElementById('cancelEdit');
         const saveEditBtn = document.getElementById('saveEdit');
         let editingExpenseId = null;
@@ -474,13 +480,20 @@
         function renderDailyDetail() {
             const dailyView = document.getElementById('dailyView');
             dailyView.innerHTML = '';
-            const expensesByDate = expenses.reduce((acc, expense) => {
+
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const currentMonthExpenses = expenses.filter(e => e.timestamp.getMonth() === currentMonth && e.timestamp.getFullYear() === currentYear);
+
+            const expensesByDate = currentMonthExpenses.reduce((acc, expense) => {
                 const dateKey = formatDate(expense.timestamp);
                 if (!acc[dateKey]) acc[dateKey] = { expenses: [], total: 0 };
                 acc[dateKey].expenses.push(expense);
                 acc[dateKey].total += expense.amount;
                 return acc;
             }, {});
+
             const sortedDates = Object.keys(expensesByDate).sort((a, b) => {
                 const partsA = a.split('/');
                 const dateA = new Date(partsA[2], partsA[1] - 1, partsA[0]);
@@ -490,7 +503,7 @@
             });
 
             if (sortedDates.length === 0) {
-                dailyView.innerHTML = '<p class="text-gray-500 text-center mt-8 text-sm">No daily expenses to show.</p>';
+                dailyView.innerHTML = '<p class="text-gray-500 text-center mt-8 text-sm">No expenses for this month yet.</p>';
                 return;
             }
 
@@ -503,7 +516,6 @@
                 const details = document.createElement('details');
                 details.className = 'bg-white rounded-xl shadow-sm';
                 
-                // Group expenses for the day by category
                 const expensesGroupedByCategory = day.expenses.reduce((acc, expense) => {
                     if (!acc[expense.category]) {
                         acc[expense.category] = {
@@ -515,7 +527,6 @@
                     acc[expense.category].originalIds.push(expense.id);
                     return acc;
                 }, {});
-
 
                 const summary = document.createElement('summary');
                 summary.className = 'p-3 flex justify-between items-center font-semibold';
@@ -557,7 +568,6 @@
                         contentContainer.appendChild(item);
                     }
                 });
-
 
                 details.appendChild(contentContainer);
                 container.appendChild(details);
@@ -857,14 +867,19 @@
             monthlyView.appendChild(monthList);
         }
 
-        function populateEditCategoryOptions(expense) {
+        function updateEditCategoryOptions(dateString) { // expects "YYYY-MM-DD"
             const now = new Date();
-            editCategorySelect.innerHTML = ''; // Clear existing options
+            const selectedDate = new Date(dateString + 'T12:00:00Z'); // Use noon UTC to avoid timezone issues for date-only comparison
+            const today = new Date();
+            today.setUTCHours(0, 0, 0, 0);
+            selectedDate.setUTCHours(0, 0, 0, 0);
+
+            const originalCategory = editCategorySelect.value; // Save currently selected value
+            editCategorySelect.innerHTML = ''; 
 
             let availableOptions = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'];
 
-            if (isSameDay(expense.timestamp, now)) {
-                // It's an expense from today, so restrict options
+            if (selectedDate.getTime() >= today.getTime()) { // If it's today
                 const hour = now.getHours();
                 availableOptions = [];
                 if (hour >= 6) availableOptions.push('Breakfast');
@@ -879,7 +894,13 @@
                 option.textContent = opt;
                 editCategorySelect.appendChild(option);
             });
+
+            // Try to restore the original selection if it's still available
+            if (availableOptions.includes(originalCategory)) {
+                editCategorySelect.value = originalCategory;
+            }
         }
+
 
         // --- Event Delegation & Modal Controls ---
         document.body.addEventListener('click', (e) => {
@@ -900,7 +921,6 @@
             if (editBtn) {
                 editingExpenseId = null;
                 editingExpenseIds = null;
-
                 const originalIdsJSON = editBtn.dataset.originalIds;
 
                 if (originalIdsJSON) { // Group edit from Daily View
@@ -910,7 +930,15 @@
                     const representativeExpense = originalExpenses[0];
 
                     if (representativeExpense) {
-                        populateEditCategoryOptions(representativeExpense);
+                        const today = new Date().toISOString().split("T")[0];
+                        editDateInput.max = today;
+                        const expenseDate = representativeExpense.timestamp;
+                        const dateString = `${expenseDate.getFullYear()}-${String(expenseDate.getMonth() + 1).padStart(2, '0')}-${String(expenseDate.getDate()).padStart(2, '0')}`;
+                        editDateInput.value = dateString;
+
+                        updateEditCategoryOptions(dateString); // Initial population
+                        editDateInput.onchange = () => updateEditCategoryOptions(editDateInput.value);
+
                         editAmountInput.value = totalAmount;
                         editCategorySelect.value = representativeExpense.category;
                         editModal.classList.remove('hidden');
@@ -919,7 +947,15 @@
                     editingExpenseId = editBtn.dataset.id;
                     const expense = expenses.find(ex => ex.id === editingExpenseId);
                     if(expense) {
-                        populateEditCategoryOptions(expense);
+                        const today = new Date().toISOString().split("T")[0];
+                        editDateInput.max = today;
+                        const expenseDate = expense.timestamp;
+                        const dateString = `${expenseDate.getFullYear()}-${String(expenseDate.getMonth() + 1).padStart(2, '0')}-${String(expenseDate.getDate()).padStart(2, '0')}`;
+                        editDateInput.value = dateString;
+
+                        updateEditCategoryOptions(dateString);
+                        editDateInput.onchange = () => updateEditCategoryOptions(editDateInput.value);
+
                         editAmountInput.value = expense.amount;
                         editCategorySelect.value = expense.category;
                         editModal.classList.remove('hidden');
@@ -970,6 +1006,16 @@
                 showAlert("Please select a date.");
                 return;
             }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const selectedDateCheck = new Date(dateStr + 'T00:00:00');
+            
+            if (selectedDateCheck.getTime() > today.getTime()) {
+                showAlert("Future dates are not allowed.");
+                return;
+            }
+
             let entriesAdded = 0;
             let entriesMerged = 0;
             const selectedDate = new Date(dateStr + 'T12:00:00');
@@ -1034,14 +1080,33 @@
             }
 
             const newCategory = editCategorySelect.value;
-            let idsToDelete = editingExpenseIds || (editingExpenseId ? [editingExpenseId] : []);
+            if (!newCategory) {
+                showAlert("Please select a valid category.");
+                return;
+            }
+            const newDateStr = editDateInput.value; // "YYYY-MM-DD"
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const selectedDateCheck = new Date(newDateStr + 'T00:00:00');
 
+            if (selectedDateCheck.getTime() > today.getTime()) {
+                showAlert("Future dates are not allowed.");
+                return;
+            }
+
+            let idsToDelete = editingExpenseIds || (editingExpenseId ? [editingExpenseId] : []);
             if (idsToDelete.length === 0) return;
 
             const representativeExpense = expenses.find(e => e.id === idsToDelete[0]);
             if (!representativeExpense) return;
 
-            const originalTimestamp = representativeExpense.timestamp;
+            // Preserve original time, but apply new date
+            const originalTime = representativeExpense.timestamp;
+            const [year, month, day] = newDateStr.split('-').map(Number);
+            
+            const updatedTimestamp = new Date(originalTime.getTime());
+            updatedTimestamp.setFullYear(year, month - 1, day);
 
             // 1. Remove all original expenses being edited
             expenses = expenses.filter(e => !idsToDelete.includes(e.id));
@@ -1051,7 +1116,7 @@
                 id: Date.now().toString(),
                 amount: newAmount,
                 category: newCategory,
-                timestamp: originalTimestamp
+                timestamp: updatedTimestamp
             });
             showToast(`Expense for ${newCategory} updated.`);
 
@@ -1255,4 +1320,5 @@
 
 </body>
 </html>
+
 
